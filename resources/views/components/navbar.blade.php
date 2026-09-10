@@ -23,7 +23,7 @@
                     @if(auth()->user()->role === 'admin')
                         <a href="{{ route('admin.dashboard') }}" class="text-sm font-medium text-gray-300 hover:text-white transition">Admin</a>
                     @endif
-                    <a href="{{ route('dashboard') }}" class="text-sm font-medium text-gray-300 hover:text-white transition">My Bookings</a>
+                    <a href="{{ route('dashboard.index') }}" class="text-sm font-medium text-gray-300 hover:text-white transition">My Bookings</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="text-sm font-medium text-gray-400 hover:text-white transition">Logout</button>
@@ -53,7 +53,7 @@
             <a href="{{ route('contact.show') }}" class="block px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-md transition">Contact</a>
             <div class="divider my-2"></div>
             @auth
-                <a href="{{ route('dashboard') }}" class="block px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-md transition">My Bookings</a>
+                <a href="{{ route('dashboard.index') }}" class="block px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-md transition">My Bookings</a>
                 @if(auth()->user()->role === 'admin')
                     <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-md transition">Admin</a>
                 @endif
