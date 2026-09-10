@@ -98,6 +98,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/bookings', [GuestBookingController::class, 'index'])->name('bookings.index');
         Route::get('/bookings/{booking}', [GuestBookingController::class, 'show'])->name('bookings.show');
         Route::post('/bookings/{booking}/cancel', [GuestBookingController::class, 'cancel'])->name('bookings.cancel');
+        Route::post('/bookings/{booking}/pay', [GuestBookingController::class, 'pay'])->name('bookings.pay');
     });
 });
 

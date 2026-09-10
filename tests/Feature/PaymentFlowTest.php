@@ -6,7 +6,6 @@ use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase as BaseTestCase;
@@ -24,7 +23,13 @@ use Tests\TestCase as BaseTestCase;
 final class PaymentFlowTest extends BaseTestCase
 {
     use DatabaseTransactions;
-    use WithoutMiddleware;
+
+    protected function postAuthenticated(string $route, array $data = []): \Illuminate\Testing\TestResponse
+    {
+        return $this->actingAs($this->guest())
+            ->withSession(['_token' => 'test-csrf-token'])
+            ->post($route, ['_token' => 'test-csrf-token', ...$data]);
+    }
 
     protected function guest(): User
     {
@@ -68,11 +73,10 @@ final class PaymentFlowTest extends BaseTestCase
 
         $room = $this->room();
 
-        $response = $this->actingAs($this->guest())
-            ->post(route('booking.store'), array_merge([
-                'room_id' => $room->id,
-                'guests_count' => 2,
-            ], $this->dates()));
+        $response = $this->postAuthenticated(route('booking.store'), array_merge([
+            'room_id' => $room->id,
+            'guests_count' => 2,
+        ], $this->dates()));
 
         $response->assertRedirect('https://checkout.paystack.com/fake123');
 
@@ -86,13 +90,12 @@ final class PaymentFlowTest extends BaseTestCase
     {
         $room = $this->room();
 
-        $this->actingAs($this->guest())
-            ->post(route('booking.store'), [
-                'room_id' => $room->id,
-                'guests_count' => 2,
-                'check_in' => now()->addDays(2)->toDateString(),
-                'check_out' => now()->addDay()->toDateString(),
-            ])
+        $this->postAuthenticated(route('booking.store'), [
+            'room_id' => $room->id,
+            'guests_count' => 2,
+            'check_in' => now()->addDays(2)->toDateString(),
+            'check_out' => now()->addDay()->toDateString(),
+        ])
             ->assertSessionHasErrors('check_out');
     }
 
@@ -109,8 +112,7 @@ final class PaymentFlowTest extends BaseTestCase
             'payment_reference' => 'BOOK-'.Str::random(12),
         ]);
 
-        $response = $this->actingAs($this->guest())
-            ->post(route('booking.store'), array_merge([
+        $response = $this->postAuthenticated(route('booking.store'), array_merge([
                 'room_id' => $existing->room_id,
                 'guests_count' => 1,
             ], $this->dates()));
@@ -203,6 +205,53 @@ final class PaymentFlowTest extends BaseTestCase
         ], $raw)->assertOk();
 
         $this->assertEquals('cancelled', $booking->fresh()->status);
+    }
+
+    public function test_retry_payment_redirects_pending_booking_to_paystack(): void
+    {
+        $booking = Booking::create([
+            'user_id' => $this->guest()->id,
+            'room_id' => $this->room()->id,
+            'check_in' => now()->addDays(2)->toDateString(),
+            'check_out' => now()->addDays(5)->toDateString(),
+            'guests_count' => 1,
+            'total_amount' => 50000,
+            'status' => 'pending_payment',
+            'payment_reference' => 'BOOK-'.Str::random(12),
+        ]);
+
+        Http::fake([
+            'api.paystack.co/transaction/initialize' => Http::response([
+                'status' => true,
+                'message' => 'Authorization URL created',
+                'data' => [
+                    'authorization_url' => 'https://checkout.paystack.com/retry123',
+                    'access_code' => 'retry123',
+                    'reference' => $booking->payment_reference,
+                ],
+            ], 200),
+        ]);
+
+        $this->postAuthenticated(route('dashboard.bookings.pay', $booking))
+            ->assertRedirect('https://checkout.paystack.com/retry123');
+    }
+
+    public function test_retry_payment_rejected_for_confirmed_booking(): void
+    {
+        $booking = Booking::create([
+            'user_id' => $this->guest()->id,
+            'room_id' => $this->room()->id,
+            'check_in' => now()->addDays(2)->toDateString(),
+            'check_out' => now()->addDays(5)->toDateString(),
+            'guests_count' => 1,
+            'total_amount' => 50000,
+            'status' => 'confirmed',
+            'payment_reference' => 'BOOK-'.Str::random(12),
+        ]);
+
+        $this->postAuthenticated(route('dashboard.bookings.pay', $booking))
+            ->assertRedirect(route('dashboard.bookings.show', $booking))
+            ->assertSessionHas('error');
     }
 
     public function test_callback_verifies_payment_and_confirms_booking(): void

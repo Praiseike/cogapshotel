@@ -54,7 +54,20 @@
                 </div>
             </div>
 
-            @if(in_array($booking->status, ['pending_payment', 'confirmed']))
+            @if($booking->status === 'pending_payment')
+                <div class="mt-8 border-t pt-6">
+                    <div class="flex flex-wrap gap-3">
+                        <form method="POST" action="{{ route('dashboard.bookings.pay', $booking) }}">
+                            @csrf
+                            <button type="submit" class="btn-primary">Continue to Payment</button>
+                        </form>
+                        <form method="POST" action="{{ route('dashboard.bookings.cancel', $booking) }}" onsubmit="return confirm('Are you sure you want to cancel this booking?')">
+                            @csrf
+                            <button type="submit" class="btn-danger">Cancel Booking</button>
+                        </form>
+                    </div>
+                </div>
+            @elseif($booking->status === 'confirmed')
                 <div class="mt-8 border-t pt-6">
                     <form method="POST" action="{{ route('dashboard.bookings.cancel', $booking) }}" onsubmit="return confirm('Are you sure you want to cancel this booking?')">
                         @csrf

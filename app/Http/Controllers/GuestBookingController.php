@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Services\BookingService;
+use App\Services\PaymentService;
 
 class GuestBookingController extends Controller
 {
     public function __construct(
         protected BookingService $bookingService,
+        protected PaymentService $paymentService,
     ) {}
 
     public function index()
@@ -42,5 +44,26 @@ class GuestBookingController extends Controller
 
         return redirect()->route('dashboard.bookings.show', $booking)
             ->with('success', 'Booking cancelled successfully.');
+    }
+
+    public function pay(Booking $booking)
+    {
+        if ($booking->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($booking->status !== 'pending_payment') {
+            return redirect()->route('dashboard.bookings.show', $booking)
+                ->with('error', 'Only pending-payment bookings can be paid.');
+        }
+
+        try {
+            $payment = $this->paymentService->initializeTransaction($booking);
+        } catch (\Throwable $e) {
+            return redirect()->route('dashboard.bookings.show', $booking)
+                ->with('error', 'Could not reach the payment gateway. Please try again.');
+        }
+
+        return redirect()->away($payment['authorization_url']);
     }
 }
