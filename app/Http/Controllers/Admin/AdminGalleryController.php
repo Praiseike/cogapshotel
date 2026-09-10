@@ -24,7 +24,7 @@ class AdminGalleryController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'image' => 'required|image|max:5120',
+            'image' => 'required|image|max:10240',
             'caption' => 'nullable|string|max:255',
             'sort_order' => 'integer|min:0',
             'is_active' => 'boolean',
@@ -50,7 +50,7 @@ class AdminGalleryController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|image|max:10240',
             'caption' => 'nullable|string|max:255',
             'sort_order' => 'integer|min:0',
             'is_active' => 'boolean',
