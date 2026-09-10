@@ -109,6 +109,6 @@ class BookingService
             return false;
         }
 
-        return ! $room->isAvailableForDates($checkIn, $checkOut);
+        return $room->isAvailableForDates($checkIn, $checkOut);
     }
 }
