@@ -12,12 +12,14 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\GuestBookingController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Models\Booking;
 use Illuminate\Http\Request;
@@ -39,6 +41,16 @@ Route::post('/contact', [ContactController::class, 'store'])->name('contact.stor
 Route::view('/about', 'static.about')->name('about');
 Route::view('/terms', 'static.terms')->name('terms');
 Route::view('/privacy', 'static.privacy')->name('privacy');
+Route::view('/policies', 'static.policies')->name('policies');
+
+// SEO
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+
+// Availability API (public)
+Route::get('/api/rooms/{room}/availability', [AvailabilityController::class, 'check'])->name('api.rooms.availability');
+Route::get('/api/rooms/{room}/booked-dates', [AvailabilityController::class, 'bookedDates'])->name('api.rooms.bookedDates');
+Route::get('/api/rooms/{room}/quote', [AvailabilityController::class, 'quote'])->name('api.rooms.quote');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');

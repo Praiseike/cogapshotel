@@ -22,6 +22,18 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label for="hotel_whatsapp" class="block text-sm font-medium text-gray-700">WhatsApp Number</label>
+                    <input type="text" id="hotel_whatsapp" name="hotel_whatsapp" value="{{ $settings['hotel_whatsapp'] ?? '' }}" placeholder="+234 800 000 0000" class="input-field mt-1">
+                    <p class="mt-1 text-xs text-gray-500">Used for the floating button and contact page. Include country code.</p>
+                </div>
+                <div>
+                    <label for="hotel_whatsapp_message" class="block text-sm font-medium text-gray-700">WhatsApp Prefilled Message</label>
+                    <input type="text" id="hotel_whatsapp_message" name="hotel_whatsapp_message" value="{{ $settings['hotel_whatsapp_message'] ?? '' }}" class="input-field mt-1">
+                </div>
+            </div>
+
             <div>
                 <label for="hotel_address" class="block text-sm font-medium text-gray-700">Address</label>
                 <input type="text" id="hotel_address" name="hotel_address" value="{{ $settings['hotel_address'] ?? '' }}" class="input-field mt-1">

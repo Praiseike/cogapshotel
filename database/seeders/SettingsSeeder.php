@@ -13,6 +13,8 @@ class SettingsSeeder extends Seeder
             'hotel_name' => 'Luxury Grand Hotel',
             'hotel_email' => 'reservations@luxurygrand.com',
             'hotel_phone' => '+234 800 555 0134',
+            'hotel_whatsapp' => '+234 800 555 0134',
+            'hotel_whatsapp_message' => 'Hello! I would like to enquire about availability.',
             'hotel_address' => '12 Independence Avenue, Victoria Island, Lagos',
             'hotel_description' => 'Experience unparalleled luxury and comfort. Our hotel offers world-class amenities, exceptional service, and an unforgettable stay.',
         ];

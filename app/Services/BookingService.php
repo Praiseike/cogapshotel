@@ -3,10 +3,14 @@
 namespace App\Services;
 
 use App\Exceptions\BookingConflictException;
+use App\Mail\BookingConfirmed;
 use App\Models\Booking;
 use App\Models\Room;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class BookingService
@@ -73,7 +77,23 @@ class BookingService
             ]);
         });
 
-        return $booking->fresh();
+        $fresh = $booking->fresh(['user', 'room']);
+
+        // Email notifications (queued if queue driver configured, fallback to sync)
+        try {
+            if ($fresh->user && $fresh->user->email) {
+                Mail::to($fresh->user->email)->send(new BookingConfirmed($fresh));
+            }
+
+            $adminEmail = Setting::getValue('hotel_email');
+            if ($adminEmail && filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($adminEmail)->send(new BookingConfirmed($fresh));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Booking confirmation email failed: '.$e->getMessage(), ['booking_id' => $booking->id]);
+        }
+
+        return $fresh;
     }
 
     public function cancelBooking(Booking $booking): Booking

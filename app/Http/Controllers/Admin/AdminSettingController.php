@@ -21,6 +21,8 @@ class AdminSettingController extends Controller
             'hotel_name' => 'nullable|string|max:255',
             'hotel_email' => 'nullable|email|max:255',
             'hotel_phone' => 'nullable|string|max:20',
+            'hotel_whatsapp' => 'nullable|string|max:20',
+            'hotel_whatsapp_message' => 'nullable|string|max:500',
             'hotel_address' => 'nullable|string|max:500',
             'hotel_description' => 'nullable|string|max:1000',
         ]);

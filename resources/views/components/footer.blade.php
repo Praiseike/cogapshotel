@@ -1,57 +1,76 @@
-<footer class="bg-gray-900 text-gray-400">
+<footer class="bg-ink-950 text-cream-50/70">
     @php($siteName = \App\Models\Setting::getValue('hotel_name', config('app.name', 'Hotel')))
-    @php($siteEmail = \App\Models\Setting::getValue('hotel_email', 'info@hotel.com'))
+    @php($siteEmail = \App\Models\Setting::getValue('hotel_email', 'reservations@hotel.com'))
     @php($sitePhone = \App\Models\Setting::getValue('hotel_phone', '+1 234 567 890'))
-    @php($siteAddress = \App\Models\Setting::getValue('hotel_address', '123 Hotel Street, City'))
-    @php($siteDescription = \App\Models\Setting::getValue('hotel_description', 'Experience unparalleled luxury and comfort.'))
+    @php($siteWhatsapp = \App\Models\Setting::getValue('hotel_whatsapp', $sitePhone))
+    @php($siteAddress = \App\Models\Setting::getValue('hotel_address', '12 Heritage Avenue, Old Town'))
+    @php($siteDescription = \App\Models\Setting::getValue('hotel_description', 'A grand house of quiet luxury — fine rooms, attentive service, and timeless calm in the heart of the city.'))
+    @php($waUrl = whatsapp_url($siteWhatsapp, \App\Models\Setting::getValue('hotel_whatsapp_message', 'Hello! I would like to enquire about availability.')))
+
+    <div class="h-[3px] bg-gradient-to-r from-brass-800 via-brass-400 to-brass-800"></div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div class="md:col-span-1">
-                <div class="flex items-center gap-2 mb-4">
-                    <svg class="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
-                    </svg>
-                    <span class="text-xl font-display font-bold text-white tracking-tight">{{ $siteName }}</span>
+        <div class="py-16 grid grid-cols-1 md:grid-cols-12 gap-12">
+            <div class="md:col-span-5">
+                <div class="flex items-center gap-4">
+                    <span class="flex h-12 w-12 items-center justify-center border border-brass-400/70 outline outline-1 outline-offset-[5px] outline-brass-400/20 font-display text-2xl text-brass-300">
+                        {{ strtoupper(substr($siteName, 0, 1)) }}
+                    </span>
+                    <span class="leading-tight">
+                        <span class="block font-display text-3xl text-cream-50">{{ $siteName }}</span>
+                        <span class="block text-[10px] uppercase tracking-[0.38em] text-brass-300 mt-1">Hotel · Suites · Residence</span>
+                    </span>
                 </div>
-                <p class="text-sm text-gray-400 leading-relaxed max-w-xs">{{ $siteDescription }}</p>
+                <p class="mt-6 max-w-sm font-light leading-[1.85] text-[15px]">{{ $siteDescription }}</p>
+                <div class="mt-7 flex items-center gap-3">
+                    <span class="h-px w-12 bg-brass-500/70"></span>
+                    <span class="text-[11px] uppercase tracking-[0.3em] text-brass-300">Since · Heritage · Honour</span>
+                </div>
             </div>
 
-            <div class="md:col-span-1">
-                <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Navigate</h4>
-                <ul class="space-y-2.5">
-                    <li><a href="{{ route('rooms.index') }}" class="text-sm text-gray-400 hover:text-amber-400 transition-colors">Rooms &amp; Suites</a></li>
-                    <li><a href="{{ route('services.index') }}" class="text-sm text-gray-400 hover:text-amber-400 transition-colors">Services</a></li>
-                    <li><a href="{{ route('gallery.index') }}" class="text-sm text-gray-400 hover:text-amber-400 transition-colors">Gallery</a></li>
-                    <li><a href="{{ route('contact.show') }}" class="text-sm text-gray-400 hover:text-amber-400 transition-colors">Contact</a></li>
-                    <li><a href="{{ route('about') }}" class="text-sm text-gray-400 hover:text-amber-400 transition-colors">About Us</a></li>
+            <div class="md:col-span-3">
+                <h4 class="text-[11px] font-medium uppercase tracking-[0.32em] text-cream-50">Explore</h4>
+                <span class="mt-3 block h-px w-10 bg-brass-500/70"></span>
+                <ul class="mt-6 space-y-3.5 text-[15px] font-light">
+                    <li><a href="{{ route('rooms.index') }}" class="hover:text-brass-300 transition-colors">Rooms &amp; Suites</a></li>
+                    <li><a href="{{ route('services.index') }}" class="hover:text-brass-300 transition-colors">Services &amp; Dining</a></li>
+                    <li><a href="{{ route('gallery.index') }}" class="hover:text-brass-300 transition-colors">Gallery</a></li>
+                    <li><a href="{{ route('about') }}" class="hover:text-brass-300 transition-colors">Our Heritage</a></li>
+                    <li><a href="{{ route('contact.show') }}" class="hover:text-brass-300 transition-colors">Contact &amp; Location</a></li>
                 </ul>
             </div>
 
-            <div class="md:col-span-1">
-                <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Get in Touch</h4>
-                <ul class="space-y-3">
-                    <li class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
-                        <span class="text-sm text-gray-400 leading-relaxed">{{ $siteAddress }}</span>
-                    </li>
-                    <li class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
-                        <span class="text-sm text-gray-400">{{ $sitePhone }}</span>
-                    </li>
-                    <li class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-                        <span class="text-sm text-gray-400">{{ $siteEmail }}</span>
-                    </li>
+            <div class="md:col-span-4">
+                <h4 class="text-[11px] font-medium uppercase tracking-[0.32em] text-cream-50">Reservations</h4>
+                <span class="mt-3 block h-px w-10 bg-brass-500/70"></span>
+                <ul class="mt-6 space-y-4 text-[15px] font-light">
+                    <li class="flex gap-3"><span class="text-brass-400">—</span><span>{{ $siteAddress }}</span></li>
+                    <li class="flex gap-3"><span class="text-brass-400">—</span><span>{{ $sitePhone }}</span></li>
+                    <li class="flex gap-3"><span class="text-brass-400">—</span><span>{{ $siteEmail }}</span></li>
+                    @if($waUrl)
+                    <li class="flex gap-3"><span class="text-brass-400">—</span><a href="{{ $waUrl }}" target="_blank" rel="noopener" class="hover:text-brass-300">WhatsApp: {{ $siteWhatsapp }}</a></li>
+                    @endif
                 </ul>
+                <div class="mt-8 flex flex-wrap gap-3">
+                    <a href="{{ route('rooms.index') }}" class="inline-flex items-center gap-3 border border-brass-400/60 px-7 py-3 text-[11px] uppercase tracking-[0.26em] text-brass-200 hover:bg-brass-600 hover:border-brass-600 hover:text-white transition-all duration-300">
+                        Book Your Stay <span aria-hidden="true">→</span>
+                    </a>
+                    @if($waUrl)
+                    <a href="{{ $waUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-[#25D366] px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-white hover:bg-[#1ebe59] transition">
+                        WhatsApp Us
+                    </a>
+                    @endif
+                </div>
             </div>
         </div>
 
-        <div class="border-t border-gray-800 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <span class="text-sm text-gray-500">&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</span>
-            <span class="flex flex-wrap justify-center gap-6">
-                <a href="{{ route('privacy') }}" class="text-sm text-gray-500 hover:text-amber-400 transition-colors">Privacy Policy</a>
-                <a href="{{ route('terms') }}" class="text-sm text-gray-500 hover:text-amber-400 transition-colors">Terms &amp; Conditions</a>
+        <div class="border-t border-cream-50/10 py-7 flex flex-col md:flex-row items-center justify-between gap-4">
+            <span class="text-[12px] uppercase tracking-[0.2em] text-cream-50/40">&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</span>
+            <span class="flex gap-8 text-[12px] uppercase tracking-[0.2em]">
+                <a href="{{ route('policies') }}" class="text-cream-50/40 hover:text-brass-300 transition-colors">Policies</a>
+                <a href="{{ route('privacy') }}" class="text-cream-50/40 hover:text-brass-300 transition-colors">Privacy</a>
+                <a href="{{ route('terms') }}" class="text-cream-50/40 hover:text-brass-300 transition-colors">Terms</a>
+                <a href="{{ route('sitemap') }}" class="text-cream-50/40 hover:text-brass-300 transition-colors">Sitemap</a>
             </span>
         </div>
     </div>
