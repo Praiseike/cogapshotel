@@ -13,9 +13,8 @@
         <div class="py-16 grid grid-cols-1 md:grid-cols-12 gap-12">
             <div class="md:col-span-5">
                 <div class="flex items-center gap-4">
-                    <span class="flex h-12 w-12 items-center justify-center border border-brass-400/70 outline outline-1 outline-offset-[5px] outline-brass-400/20 font-display text-2xl text-brass-300">
-                        {{ strtoupper(substr($siteName, 0, 1)) }}
-                    </span>
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ $siteName }} logo"
+                         class="h-12 w-auto max-w-[180px] object-contain shrink-0" />
                     <span class="leading-tight">
                         <span class="block font-display text-3xl text-cream-50">{{ $siteName }}</span>
                         <span class="block text-[10px] uppercase tracking-[0.38em] text-brass-300 mt-1">Hotel · Suites · Residence</span>

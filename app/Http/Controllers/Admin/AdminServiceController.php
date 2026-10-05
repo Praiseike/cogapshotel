@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\CloudinaryService;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class AdminServiceController extends Controller
 {
+    public function __construct(protected CloudinaryService $images) {}
+
     public function index()
     {
         $services = Service::latest()->paginate(20);
@@ -27,7 +30,7 @@ class AdminServiceController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:2000',
             'price' => 'nullable|numeric|min:0',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
             'category' => 'nullable|string|max:100',
             'is_active' => 'boolean',
         ]);
@@ -36,10 +39,11 @@ class AdminServiceController extends Controller
         $validated['is_active'] = $request->boolean('is_active');
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('services', 'public');
+            $validated['image'] = $this->images->upload($request->file('image'), 'services');
         }
 
-        Service::create($validated);
+        $service = Service::create($validated);
+        \App\Support\ActivityLogger::log('admin.service_created', $service, [], "Service '{$service->name}' created");
 
         return redirect()->route('admin.services.index')
             ->with('success', 'Service created successfully.');
@@ -56,7 +60,7 @@ class AdminServiceController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:2000',
             'price' => 'nullable|numeric|min:0',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
             'category' => 'nullable|string|max:100',
             'is_active' => 'boolean',
         ]);
@@ -65,10 +69,12 @@ class AdminServiceController extends Controller
         $validated['is_active'] = $request->boolean('is_active');
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('services', 'public');
+            $this->images->delete($service->image);
+            $validated['image'] = $this->images->upload($request->file('image'), 'services');
         }
 
         $service->update($validated);
+        \App\Support\ActivityLogger::log('admin.service_updated', $service, [], "Service '{$service->name}' updated");
 
         return redirect()->route('admin.services.index')
             ->with('success', 'Service updated successfully.');
@@ -76,6 +82,8 @@ class AdminServiceController extends Controller
 
     public function destroy(Service $service)
     {
+        $this->images->delete($service->image);
+        \App\Support\ActivityLogger::log('admin.service_deleted', $service, [], "Service '{$service->name}' deleted");
         $service->delete();
 
         return redirect()->route('admin.services.index')

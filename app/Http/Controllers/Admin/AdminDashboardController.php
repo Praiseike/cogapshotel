@@ -47,11 +47,12 @@ class AdminDashboardController extends Controller
 
         $maxRevenue = max($revenueChart) ?: 1;
 
-        // Occupancy today
+        // Occupancy today — distinct rooms, not bookings
         $occupiedToday = Booking::where('status', 'confirmed')
             ->where('check_in', '<=', now()->toDateString())
             ->where('check_out', '>', now()->toDateString())
-            ->count();
+            ->distinct()
+            ->count('room_id');
         $occupancyRate = $totalRooms > 0 ? round(($occupiedToday / $totalRooms) * 100) : 0;
 
         // Upcoming check-ins (next 7 days)

@@ -18,7 +18,7 @@
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">Room</dt>
-                            <dd class="text-sm font-medium text-gray-900">{{ $booking->room->name }} ({{ $booking->room->category->name }})</dd>
+                            <dd class="text-sm font-medium text-gray-900">{{ $booking->room?->name ?? '—' }} ({{ $booking->room?->category?->name ?? '—' }})</dd>
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">Guests</dt>
@@ -48,11 +48,15 @@
                     <dl class="grid grid-cols-2 gap-4">
                         <div>
                             <dt class="text-sm text-gray-500">Name</dt>
-                            <dd class="text-sm font-medium text-gray-900">{{ $booking->user->name }}</dd>
+                            <dd class="text-sm font-medium text-gray-900">{{ $booking->user?->name ?? $booking->guest_name ?? 'Guest' }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">Email</dt>
-                            <dd class="text-sm font-medium text-gray-900">{{ $booking->user->email }}</dd>
+                            <dd class="text-sm font-medium text-gray-900">{{ $booking->user?->email ?? $booking->guest_email ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm text-gray-500">Heard via</dt>
+                            <dd class="text-sm font-medium text-gray-900">{{ $booking->source ? (\App\Models\Booking::SOURCES[$booking->source] ?? $booking->source) : '—' }}</dd>
                         </div>
                     </dl>
                 </div>

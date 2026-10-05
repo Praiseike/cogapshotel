@@ -1,0 +1,15 @@
+# Shared hosting: the domain points at this folder, so forward
+# every request into Laravel's /public front controller.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+Options -Indexes
+
+# Never serve sensitive files from the account root
+<FilesMatch "^(\.env|composer\.(json|lock)|phpunit\.xml|artisan|serve\.sh)$">
+    Require all denied
+</FilesMatch>

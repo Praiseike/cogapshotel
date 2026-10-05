@@ -17,6 +17,7 @@ class ReleaseExpiredBookings extends Command
 
         if ($count > 0) {
             $this->info("Released {$count} expired pending bookings.");
+            \App\Support\ActivityLogger::log('booking.expired', null, ['released' => $count], "{$count} unpaid booking(s) expired");
         } else {
             $this->line('No expired bookings to release.');
         }

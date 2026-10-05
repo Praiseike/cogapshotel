@@ -23,3 +23,6 @@ Schedule::command('queue:prune-failed --hours=168')
 
 Schedule::command('cache:prune-stale-tags')
     ->daily();
+
+Schedule::command('activity:prune --days=180')
+    ->monthly();

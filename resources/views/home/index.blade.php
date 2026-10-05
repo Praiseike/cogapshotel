@@ -32,14 +32,14 @@
             {{-- classic booking strip --}}
             <div class="mt-14 bg-cream-50/95 backdrop-blur text-left shadow-2xl">
                 <div class="h-[3px] bg-gradient-to-r from-brass-700 via-brass-400 to-brass-700"></div>
-                <form action="{{ route('rooms.index') }}" method="GET" class="grid grid-cols-2 md:grid-cols-4 divide-x divide-ink-900/10">
+                <form action="{{ route('rooms.index') }}" method="GET" x-data="searchStrip()" @submit="if(!valid) { $event.preventDefault(); }" class="grid grid-cols-2 md:grid-cols-4 divide-x divide-ink-900/10">
                     <div class="px-6 py-5">
                         <label class="input-label !mb-1">Arrival</label>
-                        <input type="date" name="check_in" value="{{ request('check_in') }}" class="w-full bg-transparent text-[15px] text-ink-900 focus:outline-none">
+                        <input type="date" name="check_in" x-model="checkIn" @change="validate()" @input="validate()" :max="checkOut ? prevDay(checkOut) : ''" min="{{ date('Y-m-d') }}" value="{{ request('check_in') }}" class="w-full bg-transparent text-[15px] text-ink-900 focus:outline-none">
                     </div>
                     <div class="px-6 py-5">
                         <label class="input-label !mb-1">Departure</label>
-                        <input type="date" name="check_out" value="{{ request('check_out') }}" class="w-full bg-transparent text-[15px] text-ink-900 focus:outline-none">
+                        <input type="date" name="check_out" x-model="checkOut" @change="validate()" @input="validate()" :min="checkIn ? nextDay(checkIn) : '{{ date('Y-m-d', strtotime('+1 day')) }}'" value="{{ request('check_out') }}" class="w-full bg-transparent text-[15px] text-ink-900 focus:outline-none">
                     </div>
                     <div class="px-6 py-5">
                         <label class="input-label !mb-1">Guests</label>
@@ -50,10 +50,30 @@
                             <option value="4">4+ Guests</option>
                         </select>
                     </div>
-                    <button class="bg-ink-900 text-cream-50 text-[12px] uppercase tracking-[0.26em] hover:bg-brass-700 transition-colors px-6 py-5">
+                    <button :disabled="!valid" class="bg-ink-900 text-cream-50 text-[12px] uppercase tracking-[0.26em] hover:bg-brass-700 transition-colors px-6 py-5 disabled:cursor-not-allowed disabled:opacity-50">
                         Check Availability →
                     </button>
+                    <p x-show="error" x-text="error" x-cloak class="col-span-2 md:col-span-4 px-6 pb-4 text-xs text-red-700"></p>
                 </form>
+                <script>
+                    function searchStrip() {
+                        return {
+                            checkIn: "{{ request('check_in') }}",
+                            checkOut: "{{ request('check_out') }}",
+                            error: '',
+                            get valid() { return this.error === ''; },
+                            nextDay(d) { const x = new Date(d); x.setDate(x.getDate() + 1); return x.toISOString().slice(0, 10); },
+                            prevDay(d) { const x = new Date(d); x.setDate(x.getDate() - 1); return x.toISOString().slice(0, 10); },
+                            validate() {
+                                this.error = '';
+                                if (!this.checkIn || !this.checkOut) return;
+                                if (new Date(this.checkOut) <= new Date(this.checkIn)) {
+                                    this.error = 'Departure must be after arrival.';
+                                }
+                            }
+                        }
+                    }
+                </script>
             </div>
         </div>
     </div>
@@ -81,7 +101,7 @@
                     every arrival greeted by name — the way grand hotels have always done it.
                 </p>
                 <div class="mt-8 grid grid-cols-3 gap-6 border-t border-ink-900/10 pt-8">
-                    <div><p class="font-display text-3xl text-ink-900">48</p><p class="mt-1 text-[11px] uppercase tracking-[0.22em] text-ink-900/50">Rooms & Suites</p></div>
+                    <div><p class="font-display text-3xl text-ink-900">{{ $availableRoomCount ?? $featuredRooms->count() }}</p><p class="mt-1 text-[11px] uppercase tracking-[0.22em] text-ink-900/50">Rooms & Suites</p></div>
                     <div><p class="font-display text-3xl text-ink-900">4.9</p><p class="mt-1 text-[11px] uppercase tracking-[0.22em] text-ink-900/50">Guest Rating</p></div>
                     <div><p class="font-display text-3xl text-ink-900">24<span class="text-lg">/7</span></p><p class="mt-1 text-[11px] uppercase tracking-[0.22em] text-ink-900/50">Concierge</p></div>
                 </div>

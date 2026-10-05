@@ -80,6 +80,12 @@ class Room extends Model
 
     public function isAvailableForDates(string $checkIn, string $checkOut, ?int $excludeBookingId = null): bool
     {
+        // A room in maintenance (or otherwise flagged off) is never bookable,
+        // even when no booking overlaps the dates.
+        if (! $this->is_available || $this->status !== 'available') {
+            return false;
+        }
+
         $query = $this->activeBookings()
             ->where('check_in', '<', $checkOut)
             ->where('check_out', '>', $checkIn);

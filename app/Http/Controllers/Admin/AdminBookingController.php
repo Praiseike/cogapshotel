@@ -43,9 +43,38 @@ class AdminBookingController extends Controller
             'status' => 'required|in:pending_payment,confirmed,cancelled,completed',
         ]);
 
+        $from = $booking->status;
         $booking->update($validated);
+
+        \App\Support\ActivityLogger::log(
+            'admin.booking_updated',
+            $booking,
+            ['from' => $from, 'to' => $validated['status']],
+            "Booking {$booking->payment_reference}: {$from} → {$validated['status']}"
+        );
 
         return redirect()->route('admin.bookings.show', $booking)
             ->with('success', 'Booking status updated successfully.');
+    }
+
+    public function bulk(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:bookings,id',
+            'action' => 'required|in:confirmed,cancelled,completed',
+        ]);
+
+        $count = Booking::whereIn('id', $validated['ids'])
+            ->update(['status' => $validated['action']]);
+
+        \App\Support\ActivityLogger::log(
+            'admin.booking_bulk',
+            null,
+            ['action' => $validated['action'], 'count' => $count],
+            "Bulk: {$count} booking(s) → {$validated['action']}"
+        );
+
+        return back()->with('success', "{$count} booking(s) marked as {$validated['action']}.");
     }
 }

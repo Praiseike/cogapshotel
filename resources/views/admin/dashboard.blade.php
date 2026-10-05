@@ -91,8 +91,8 @@
                     @foreach($upcomingCheckIns as $b)
                         <li class="flex items-center justify-between border border-gray-100 px-3 py-3">
                             <div>
-                                <p class="text-sm font-medium text-gray-900">{{ $b->user->name }}</p>
-                                <p class="text-xs text-gray-500">{{ $b->room->name }} · {{ $b->check_in->format('M d') }} → {{ $b->check_out->format('M d') }}</p>
+                                <p class="text-sm font-medium text-gray-900">{{ $b->user?->name ?? $b->guest_name ?? 'Guest' }}</p>
+                                <p class="text-xs text-gray-500">{{ $b->room?->name ?? '—' }} · {{ $b->check_in->format('M d') }} → {{ $b->check_out->format('M d') }}</p>
                             </div>
                             <span class="text-xs font-mono text-gray-600">{{ $b->payment_reference }}</span>
                         </li>
@@ -131,8 +131,8 @@
                         @foreach($recentBookings as $booking)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 text-sm font-mono text-gray-900">{{ $booking->payment_reference }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900">{{ $booking->user->name }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900">{{ $booking->room->name }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">{{ $booking->user?->name ?? $booking->guest_name ?? 'Guest' }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">{{ $booking->room?->name ?? '—' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-500">{{ $booking->check_in->format('M d') }} - {{ $booking->check_out->format('M d') }}</td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">&#8358;{{ number_format($booking->total_amount, 2) }}</td>
                                 <td class="px-6 py-4"><span class="{{ $booking->getStatusBadgeClass() }}">{{ str_replace('_', ' ', ucfirst($booking->status)) }}</span></td>

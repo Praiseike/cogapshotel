@@ -24,6 +24,12 @@ class SessionController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+            \App\Support\ActivityLogger::log(
+                $user->role === 'admin' ? 'auth.admin_login' : 'auth.login',
+                $user,
+                ['role' => $user->role],
+                $user->name.' signed in'.($user->role === 'admin' ? ' (admin)' : '')
+            );
             if ($user->role === 'admin') {
                 return redirect()->intended(route('admin.dashboard'));
             }
@@ -38,6 +44,7 @@ class SessionController extends Controller
 
     public function destroy(Request $request)
     {
+        \App\Support\ActivityLogger::log('auth.logout', Auth::user(), [], 'Signed out');
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

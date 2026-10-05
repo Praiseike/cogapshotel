@@ -22,7 +22,9 @@ class ContactController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        Contact::create($validated);
+        $contact = Contact::create($validated);
+
+        \App\Support\ActivityLogger::log('contact.received', $contact, ['subject' => $validated['subject']], "Message from {$validated['name']}");
 
         return redirect()->route('contact.show')
             ->with('success', 'Your message has been sent. We will get back to you soon.');

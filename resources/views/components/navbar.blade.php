@@ -37,9 +37,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" x-data="{ open: false }">
         <div class="flex items-center justify-between h-20">
             <a href="{{ route('home') }}" class="flex items-center gap-4 group">
-                <span class="flex h-11 w-11 items-center justify-center border border-brass-400/80 outline outline-1 outline-offset-[5px] outline-brass-400/25 font-display text-[22px] text-brass-300 group-hover:bg-brass-600 group-hover:text-white group-hover:border-brass-600 transition-all duration-300">
-                    {{ strtoupper(substr($hotelName, 0, 1)) }}
-                </span>
+                <img src="{{ asset('images/logo.png') }}" alt="{{ $hotelName }} logo"
+                     class="h-11 w-auto max-w-[160px] object-contain shrink-0" />
                 <span class="leading-tight">
                     <span class="block font-display text-[26px] tracking-wide text-cream-50">{{ $hotelName }}</span>
                     <span class="block text-[10px] uppercase tracking-[0.38em] text-brass-300/90">Hotel · Suites · Residence</span>

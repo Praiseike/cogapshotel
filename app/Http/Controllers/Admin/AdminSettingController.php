@@ -31,6 +31,13 @@ class AdminSettingController extends Controller
             Setting::setValue($key, $value);
         }
 
+        \App\Support\ActivityLogger::log(
+            'admin.settings_updated',
+            null,
+            ['keys' => array_keys($validated)],
+            'Site settings updated ('.implode(', ', array_keys($validated)).')'
+        );
+
         return redirect()->route('admin.settings.index')
             ->with('success', 'Settings updated successfully.');
     }

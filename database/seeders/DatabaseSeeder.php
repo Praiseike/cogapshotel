@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
 
         User::create([
             'name' => 'Admin',
-            'email' => 'admin@hotel.com',
+            'email' => 'admin@cogapshotel.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
             'email_verified_at' => now(),

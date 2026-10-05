@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminActivityLogController;
+use App\Http\Controllers\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Admin\AdminBookingController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminContactController;
@@ -36,7 +38,7 @@ Route::get('/services', [ServiceController::class, 'index'])->name('services.ind
 Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
 
 Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
-Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
 
 Route::view('/about', 'static.about')->name('about');
 Route::view('/terms', 'static.terms')->name('terms');
@@ -54,9 +56,9 @@ Route::get('/api/rooms/{room}/quote', [AvailabilityController::class, 'quote'])-
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('/register', [RegisteredUserController::class, 'store']);
+    Route::post('/register', [RegisteredUserController::class, 'store'])->middleware('throttle:5,1');
     Route::get('/login', [SessionController::class, 'create'])->name('login');
-    Route::post('/login', [SessionController::class, 'store']);
+    Route::post('/login', [SessionController::class, 'store'])->middleware('throttle:5,1');
 
     Route::get('/forgot-password', function () {
         return view('auth.forgot-password');
@@ -69,7 +71,7 @@ Route::middleware('guest')->group(function () {
         return $status === Password::RESET_LINK_SENT
             ? back()->with('status', __($status))
             : back()->withErrors(['email' => __($status)]);
-    })->name('password.email');
+    })->middleware('throttle:3,1')->name('password.email');
 
     Route::get('/reset-password/{token}', function (string $token, Request $request) {
         return view('auth.reset-password', ['token' => $token, 'email' => $request->email]);
@@ -94,16 +96,21 @@ Route::middleware('guest')->group(function () {
     })->name('password.update');
 });
 
+// Guest checkout: anyone can book + pay; success page is guarded by
+// ownership (user id / guest email) or the guest session (see controller).
+Route::post('/bookings', [BookingController::class, 'store'])->name('booking.store');
+Route::get('/bookings/callback', [BookingController::class, 'callback'])->name('booking.callback');
+Route::get('/bookings/{booking}/success', [BookingController::class, 'success'])->name('booking.success');
+
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
 
-    Route::post('/bookings', [BookingController::class, 'store'])->name('booking.store');
-    Route::get('/bookings/callback', [BookingController::class, 'callback'])->name('booking.callback');
-    Route::get('/bookings/{booking}/success', [BookingController::class, 'success'])->name('booking.success');
-
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/', function () {
-            $bookings = Booking::where('user_id', auth()->id())->with('room.category')->latest()->paginate(10);
+            $bookings = Booking::where(function ($q) {
+                $q->where('user_id', auth()->id())
+                    ->orWhere('guest_email', strtolower(auth()->user()->email));
+            })->with('room.category')->latest()->paginate(10);
 
             return view('dashboard.index', compact('bookings'));
         })->name('index');
@@ -121,6 +128,7 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics');
 
         Route::resource('categories', AdminCategoryController::class)->except('show');
         Route::resource('rooms', AdminRoomController::class)->except('show');
@@ -128,8 +136,10 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
         Route::resource('gallery', AdminGalleryController::class)->except('show');
 
         Route::get('/bookings', [AdminBookingController::class, 'index'])->name('bookings.index');
+        Route::post('/bookings/bulk', [AdminBookingController::class, 'bulk'])->name('bookings.bulk');
         Route::get('/bookings/{booking}', [AdminBookingController::class, 'show'])->name('bookings.show');
         Route::put('/bookings/{booking}', [AdminBookingController::class, 'update'])->name('bookings.update');
+        Route::post('/rooms/bulk', [AdminRoomController::class, 'bulk'])->name('rooms.bulk');
 
         Route::get('/contacts', [AdminContactController::class, 'index'])->name('contacts.index');
         Route::get('/contacts/{contact}', [AdminContactController::class, 'show'])->name('contacts.show');
@@ -137,4 +147,6 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
 
         Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
         Route::put('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+
+        Route::get('/activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');
     });

@@ -31,7 +31,22 @@ class RegisteredUserController extends Controller
             'role' => 'guest',
         ]);
 
+        // Retro-link: guest-checkout bookings made with this email now
+        // belong to the new account, so history is preserved.
+        \App\Models\Booking::whereNull('user_id')
+            ->where('guest_email', strtolower($user->email))
+            ->update(['user_id' => $user->id]);
+
+        $linked = \App\Models\Booking::where('user_id', $user->id)->count();
+
         Auth::login($user);
+
+        \App\Support\ActivityLogger::log(
+            'auth.register',
+            $user,
+            ['linked_bookings' => $linked],
+            $user->name.' created an account'.($linked ? " ({$linked} past booking(s) linked)" : '')
+        );
 
         return redirect()->route('dashboard.index');
     }

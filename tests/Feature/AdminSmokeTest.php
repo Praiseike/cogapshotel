@@ -31,6 +31,17 @@ final class AdminSmokeTest extends BaseTestCase
         return $guest;
     }
 
+    public function test_signed_in_users_bounce_off_guest_pages(): void
+    {
+        $this->actingAs($this->guest())
+            ->get(route('login'))
+            ->assertRedirect(route('dashboard.index'));
+
+        $this->actingAs($this->admin())
+            ->get(route('login'))
+            ->assertRedirect(route('admin.dashboard'));
+    }
+
     public function test_public_pages_render(): void
     {
         $room = Room::first();

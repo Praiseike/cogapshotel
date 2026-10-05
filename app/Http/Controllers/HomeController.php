@@ -19,6 +19,8 @@ class HomeController extends Controller
 
         $services = Service::active()->limit(4)->get();
 
-        return view('home.index', compact('featuredRooms', 'categories', 'services'));
+        $availableRoomCount = Room::available()->count();
+
+        return view('home.index', compact('featuredRooms', 'categories', 'services', 'availableRoomCount'));
     }
 }

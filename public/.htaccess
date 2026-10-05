@@ -23,3 +23,18 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Security headers (Apache shared hosting)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    # HSTS: enable ONLY once HTTPS works everywhere on the domain.
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# Never serve sensitive files if they ever land in the docroot
+<FilesMatch "^(\.env|\.git|composer\.(json|lock)|phpunit\.xml|artisan)$">
+    Require all denied
+</FilesMatch>

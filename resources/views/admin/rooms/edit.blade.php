@@ -48,10 +48,14 @@
 
             @if($room->images)
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
-                    <div class="flex gap-2 flex-wrap">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Images <span class="font-normal text-gray-400">(tick to remove)</span></label>
+                    <div class="flex gap-3 flex-wrap">
                         @foreach($room->images as $img)
-                            <img src="{{ image_url($img) }}" alt="" class="w-16 h-16 rounded-lg object-cover">
+                            <label class="relative cursor-pointer group" title="Tick to remove">
+                                <input type="checkbox" name="remove_images[]" value="{{ $img }}" class="peer absolute top-1 left-1 z-10 rounded border-gray-300">
+                                <img src="{{ image_url($img) }}" alt="" class="w-16 h-16 rounded-lg object-cover peer-checked:opacity-40">
+                                <span class="absolute inset-0 rounded-lg ring-2 ring-red-500 opacity-0 peer-checked:opacity-100 pointer-events-none"></span>
+                            </label>
                         @endforeach
                     </div>
                 </div>

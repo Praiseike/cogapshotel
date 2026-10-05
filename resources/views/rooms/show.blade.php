@@ -88,35 +88,65 @@
 
                         @if(!auth()->check())
                             <p class="mt-5 text-sm font-light text-center text-ink-900/60">
-                                <a href="{{ route('login') }}" class="text-brass-700 underline underline-offset-4">Sign in</a> to make a reservation.
+                                No account needed — confirmation goes to your email. Have an account? <a href="{{ route('login') }}" class="text-brass-700 underline underline-offset-4">Sign in</a>.
                             </p>
                         @endif
 
+                        @php($roomUnavailable = !$room->is_available || $room->status !== 'available')
+                        @if($roomUnavailable)
+                            <div class="mt-5 rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+                                This room is currently unavailable and cannot be reserved.
+                            </div>
+                        @endif
+
                         {{-- Live availability status --}}
-                        <div x-show="checkIn && checkOut" x-cloak class="mt-5 rounded-sm border px-4 py-3 text-sm" :class="availabilityClass">
+                        <div x-show="checkIn && checkOut && !roomUnavailable" x-cloak class="mt-5 rounded-sm border px-4 py-3 text-sm" :class="availabilityClass">
                             <span x-text="availabilityText"></span>
                         </div>
                         <div x-show="disabledDates.length" class="mt-3 text-[11px] text-ink-900/50">Unavailable dates are automatically blocked in the calendar.</div>
 
-                        <form method="POST" action="{{ route('booking.store') }}" class="mt-6" @submit="if(!isAvailable && checkIn && checkOut) { $event.preventDefault(); }">
+                        <form method="POST" action="{{ route('booking.store') }}" class="mt-6" @submit="if((!isAvailable && checkIn && checkOut) || roomUnavailable || checking || checkFailed) { $event.preventDefault(); }">
                             @csrf
                             <input type="hidden" name="room_id" value="{{ $room->id }}">
 
+                            <fieldset {{ $roomUnavailable ? 'disabled' : '' }} class="contents">
                             <div class="space-y-5">
                                 <div>
                                     <label class="input-label">Check-in</label>
-                                    <input type="date" name="check_in" x-model="checkIn" @change="onDatesChange()" min="{{ date('Y-m-d') }}" required
-                                           class="input-field {{ $errors->has('check_in') ? 'input-error' : '' }}">
+                                    <input type="date" name="check_in" x-model="checkIn" @change="onDatesChange()" @input="onDatesChange()" min="{{ date('Y-m-d') }}" :max="checkOut ? prevDay(checkOut) : ''" required
+                                           class="input-field {{ $errors->has('check_in') ? 'input-error' : '' }}" :class="dateError && 'input-error'">
                                     @error('check_in') <p class="mt-1 text-xs text-red-700">{{ $message }}</p> @enderror
                                     <p x-show="dateError" x-text="dateError" class="mt-1 text-xs text-red-700"></p>
                                 </div>
 
                                 <div>
                                     <label class="input-label">Check-out</label>
-                                    <input type="date" name="check_out" x-model="checkOut" @change="onDatesChange()" :min="checkIn ? nextDay(checkIn) : '{{ date('Y-m-d', strtotime('+1 day')) }}'" required
-                                           class="input-field {{ $errors->has('check_out') ? 'input-error' : '' }}">
+                                    <input type="date" name="check_out" x-model="checkOut" @change="onDatesChange()" @input="onDatesChange()" :min="checkIn ? nextDay(checkIn) : '{{ date('Y-m-d', strtotime('+1 day')) }}'" required
+                                           class="input-field {{ $errors->has('check_out') ? 'input-error' : '' }}" :class="dateError && 'input-error'">
                                     @error('check_out') <p class="mt-1 text-xs text-red-700">{{ $message }}</p> @enderror
                                 </div>
+
+                                @guest
+                                    <div>
+                                        <label class="input-label">Full name</label>
+                                        <input type="text" name="guest_name" value="{{ old('guest_name') }}" required autocomplete="name"
+                                               class="input-field {{ $errors->has('guest_name') ? 'input-error' : '' }}">
+                                        @error('guest_name') <p class="mt-1 text-xs text-red-700">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label class="input-label">Email (for confirmation + receipt)</label>
+                                        <input type="email" name="guest_email" value="{{ old('guest_email') }}" required autocomplete="email"
+                                               class="input-field {{ $errors->has('guest_email') ? 'input-error' : '' }}">
+                                        @error('guest_email') <p class="mt-1 text-xs text-red-700">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label class="input-label">Phone (optional)</label>
+                                        <input type="tel" name="guest_phone" value="{{ old('guest_phone') }}" autocomplete="tel"
+                                               class="input-field">
+                                    </div>
+                                @endguest
 
                                 <div>
                                     <label class="input-label">Guests</label>
@@ -124,6 +154,16 @@
                                         @for($i = 1; $i <= $room->capacity; $i++)
                                             <option value="{{ $i }}">{{ $i }} {{ $i === 1 ? 'Guest' : 'Guests' }}</option>
                                         @endfor
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="input-label">How did you hear about us? <span class="font-normal normal-case tracking-normal text-ink-900/40">(optional)</span></label>
+                                    <select name="source" class="input-field">
+                                        <option value="">Prefer not to say</option>
+                                        @foreach(\App\Models\Booking::SOURCES as $key => $label)
+                                            <option value="{{ $key }}" {{ old('source') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
 
@@ -139,8 +179,12 @@
                                     <p x-show="quote && !quote.available" class="mt-2 text-xs text-red-700">Selected dates are not available.</p>
                                 </div>
 
-                                <button type="submit" class="btn-dark w-full" :disabled="!canBook">
-                                    <span x-text="canBook ? 'Reserve Now' : (availabilityText || '{{ auth()->check() ? 'Reserve Now' : 'Sign in to Book' }}')"></span>
+                                <button type="submit" class="btn-dark w-full disabled:cursor-not-allowed disabled:opacity-50" :disabled="!canBook" {{ $roomUnavailable ? 'disabled' : '' }}>
+                                    @if($roomUnavailable)
+                                        <span>Unavailable</span>
+                                    @else
+                                        <span x-text="canBook ? 'Reserve Now' : (availabilityText || 'Reserve Now')"></span>
+                                    @endif
                                 </button>
                                 <p class="text-center text-xs font-light text-ink-900/45">Secure payment via Paystack · Instant confirmation</p>
 
@@ -151,6 +195,7 @@
                                 </a>
                                 @endif
                             </div>
+                            </fieldset>
                         </form>
                         <div class="mt-6 border-t border-ink-900/10 pt-5">
                             <p class="text-[11px] uppercase tracking-[0.22em] text-ink-900/50">Hotel Policies</p>
@@ -174,6 +219,9 @@
                 checkOut: '',
                 pricePerNight: {{ $room->price_per_night }},
                 roomId: {{ $room->id }},
+                roomUnavailable: {{ $roomUnavailable ? 'true' : 'false' }},
+                checking: false,
+                checkFailed: false,
                 disabledDates: [],
                 availabilityText: '',
                 isAvailable: null,
@@ -200,7 +248,10 @@
                     return this.nights * this.pricePerNight;
                 },
                 get canBook() {
-                    @if(!auth()->check()) return false; @endif
+                    if (this.roomUnavailable) return false;
+                    // Fail closed: while verifying, or if verification failed,
+                    // don't let the user submit overlapping dates.
+                    if (this.checking || this.checkFailed) return false;
                     if (!this.checkIn || !this.checkOut) return true;
                     if (this.dateError) return false;
                     if (this.isAvailable === false) return false;
@@ -212,11 +263,17 @@
                     d.setDate(d.getDate() + 1);
                     return d.toISOString().slice(0,10);
                 },
+                prevDay(dateStr) {
+                    const d = new Date(dateStr);
+                    d.setDate(d.getDate() - 1);
+                    return d.toISOString().slice(0,10);
+                },
                 onDatesChange() {
                     this.dateError = '';
                     this.availabilityText = '';
                     this.isAvailable = null;
                     this.quote = null;
+                    this.checkFailed = false;
                     this.availabilityClass = 'border-ink-900/10 bg-cream-100 text-ink-900';
 
                     if (!this.checkIn || !this.checkOut) return;
@@ -253,9 +310,11 @@
 
                     // Fetch live quote + availability
                     this.availabilityText = 'Checking availability…';
+                    this.checking = true;
                     fetch(`/api/rooms/${this.roomId}/quote?check_in=${this.checkIn}&check_out=${this.checkOut}`)
                         .then(r => r.json())
                         .then(data => {
+                            this.checking = false;
                             this.quote = data;
                             this.isAvailable = data.available;
                             if (data.available) {
@@ -267,8 +326,10 @@
                             }
                         })
                         .catch(() => {
-                            this.availabilityText = '';
-                            this.isAvailable = null;
+                            this.checking = false;
+                            this.checkFailed = true;
+                            this.availabilityText = 'Could not verify availability — please check your connection and pick the dates again.';
+                            this.availabilityClass = 'border-red-200 bg-red-50 text-red-900';
                         });
                 }
             }

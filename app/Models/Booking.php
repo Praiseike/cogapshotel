@@ -15,6 +15,9 @@ class Booking extends Model
 
     protected $fillable = [
         'user_id',
+        'guest_name',
+        'guest_email',
+        'guest_phone',
         'room_id',
         'check_in',
         'check_out',
@@ -25,6 +28,17 @@ class Booking extends Model
         'payment_id',
         'paid_at',
         'notes',
+        'source',
+    ];
+
+    public const SOURCES = [
+        'direct' => 'Direct / walk-in',
+        'google' => 'Google search',
+        'instagram' => 'Instagram',
+        'facebook' => 'Facebook',
+        'referral' => 'Friend / referral',
+        'agent' => 'Travel agent',
+        'other' => 'Other',
     ];
 
     protected function casts(): array

@@ -10,8 +10,8 @@ class SettingsSeeder extends Seeder
     public function run(): void
     {
         $settings = [
-            'hotel_name' => 'Luxury Grand Hotel',
-            'hotel_email' => 'reservations@luxurygrand.com',
+            'hotel_name' => 'Cogaps Hotel',
+            'hotel_email' => 'reservations@cogapshotel.com',
             'hotel_phone' => '+234 800 555 0134',
             'hotel_whatsapp' => '+234 800 555 0134',
             'hotel_whatsapp_message' => 'Hello! I would like to enquire about availability.',

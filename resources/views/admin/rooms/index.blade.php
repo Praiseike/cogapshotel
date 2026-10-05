@@ -25,10 +25,24 @@
 
     <div class="card">
         @if($rooms->count())
+            <form method="POST" action="{{ route('admin.rooms.bulk') }}" id="rooms-bulk-form">
+                @csrf
+                <div class="flex flex-wrap items-center gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50/60">
+                    <span class="text-xs font-medium uppercase tracking-wider text-gray-500"><span id="rooms-selected-count">0</span> selected</span>
+                    <select name="action" class="input-field w-auto !py-2 text-sm" required>
+                        <option value="">Bulk action…</option>
+                        <option value="available">Mark available</option>
+                        <option value="maintenance">Mark maintenance</option>
+                        <option value="booked">Mark booked</option>
+                    </select>
+                    <button type="submit" class="btn-secondary !py-2 text-sm" onclick="return confirmBulkRooms(event)">Apply</button>
+                </div>
+            </form>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th class="px-6 py-3"><input type="checkbox" id="rooms-select-all" class="rounded border-gray-300" aria-label="Select all"></th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Room</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price/Night</th>
@@ -40,6 +54,7 @@
                     <tbody class="divide-y divide-gray-100">
                         @foreach($rooms as $room)
                             <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4"><input type="checkbox" name="ids[]" value="{{ $room->id }}" form="rooms-bulk-form" class="room-checkbox rounded border-gray-300" aria-label="Select room {{ $room->name }}"></td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         @if($room->getPrimaryImage())
@@ -59,9 +74,13 @@
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">&#8358;{{ number_format($room->price_per_night, 2) }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-500">{{ $room->capacity }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="{{ $room->status === 'available' ? 'badge-success' : ($room->status === 'maintenance' ? 'badge-warning' : 'badge-danger') }}">
-                                        {{ ucfirst($room->status) }}
-                                    </span>
+                                    @if($room->occupied_now > 0)
+                                        <span class="badge-danger" title="Guest in house today">Occupied</span>
+                                    @else
+                                        <span class="{{ $room->status === 'available' ? 'badge-success' : ($room->status === 'maintenance' ? 'badge-warning' : 'badge-danger') }}">
+                                            {{ ucfirst($room->status) }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
@@ -82,4 +101,26 @@
             <div class="p-12 text-center text-gray-500"><p>No rooms found.</p></div>
         @endif
     </div>
+    <script>
+        (function () {
+            var selectAll = document.getElementById('rooms-select-all');
+            var count = document.getElementById('rooms-selected-count');
+            function boxes() { return Array.from(document.querySelectorAll('.room-checkbox')); }
+            function update() { if (count) count.textContent = boxes().filter(function (b) { return b.checked; }).length; }
+            if (selectAll) selectAll.addEventListener('change', function () {
+                boxes().forEach(function (b) { b.checked = selectAll.checked; });
+                update();
+            });
+            boxes().forEach(function (b) { b.addEventListener('change', update); });
+            window.confirmBulkRooms = function (e) {
+                var form = document.getElementById('rooms-bulk-form');
+                var action = form.querySelector('select[name=action]').value;
+                var n = boxes().filter(function (b) { return b.checked; }).length;
+                if (!n) { alert('Select at least one room first.'); e.preventDefault(); return false; }
+                if (!action) { alert('Choose a bulk action first.'); e.preventDefault(); return false; }
+                if (action !== 'available' && !confirm('Take ' + n + ' room(s) offline (' + action + ')? New bookings stop immediately.')) { e.preventDefault(); return false; }
+                return true;
+            };
+        })();
+    </script>
 </x-layouts.admin>

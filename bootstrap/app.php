@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            'paystack/webhook',
+            'webhook/paystack',
             'webhook/*',
         ]);
     })

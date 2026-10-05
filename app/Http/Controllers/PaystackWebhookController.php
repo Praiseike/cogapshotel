@@ -22,6 +22,7 @@ class PaystackWebhookController extends Controller
 
         if (! $this->paymentService->verifyWebhookSignature($payload, $signature)) {
             Log::warning('Invalid Paystack webhook signature');
+            \App\Support\ActivityLogger::log('webhook.rejected', null, [], 'Rejected webhook: bad signature');
 
             return response('Invalid signature', 400);
         }
@@ -46,6 +47,12 @@ class PaystackWebhookController extends Controller
     {
         $reference = $data['reference'] ?? '';
 
+        if ($reference === '') {
+            Log::error('Webhook: charge.success missing reference');
+
+            return;
+        }
+
         $booking = Booking::where('payment_reference', $reference)->first();
 
         if (! $booking) {
@@ -58,7 +65,32 @@ class PaystackWebhookController extends Controller
             return;
         }
 
-        $this->bookingService->confirmBooking($booking, $reference, $data);
+        // Never confirm a cancelled/completed booking via webhook.
+        if ($booking->status !== 'pending_payment') {
+            Log::warning("Webhook: ignoring charge.success for booking {$booking->id} with status {$booking->status}");
+
+            return;
+        }
+
+        // Verify the paid amount matches the booking (kobo vs NGN).
+        $paidKobo = (int) ($data['amount'] ?? 0);
+        $expectedKobo = (int) round((float) $booking->total_amount * 100);
+
+        if ($paidKobo !== $expectedKobo) {
+            Log::error("Webhook: amount mismatch for booking {$booking->id}: expected {$expectedKobo}, got {$paidKobo}");
+
+            return;
+        }
+
+        // Only accept success statuses from Paystack.
+        $gatewayStatus = $data['status'] ?? '';
+        if ($gatewayStatus !== '' && $gatewayStatus !== 'success') {
+            Log::warning("Webhook: ignoring non-success status '{$gatewayStatus}' for booking {$booking->id}");
+
+            return;
+        }
+
+        $this->bookingService->confirmBooking($booking, $reference, $data, 'webhook');
 
         Log::info("Webhook: Booking {$booking->id} confirmed via webhook");
     }
@@ -67,11 +99,18 @@ class PaystackWebhookController extends Controller
     {
         $reference = $data['reference'] ?? '';
 
+        if ($reference === '') {
+            return;
+        }
+
         $booking = Booking::where('payment_reference', $reference)->first();
 
-        if ($booking) {
+        // Never cancel an already-confirmed (paid) booking on a failed event.
+        // A failed attempt for a new reference must not kill a paid booking.
+        if ($booking && $booking->status === 'pending_payment') {
             $booking->update(['status' => 'cancelled']);
             Log::info("Webhook: Booking {$booking->id} cancelled - payment failed");
+            \App\Support\ActivityLogger::log('booking.payment_failed', $booking, ['reference' => $reference], "Payment failed for {$reference}");
         }
     }
 }

@@ -25,6 +25,7 @@ class AdminContactController extends Controller
 
     public function destroy(Contact $contact)
     {
+        \App\Support\ActivityLogger::log('admin.contact_deleted', $contact, [], "Message from {$contact->name} deleted");
         $contact->delete();
 
         return redirect()->route('admin.contacts.index')

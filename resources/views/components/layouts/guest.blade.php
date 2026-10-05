@@ -21,9 +21,8 @@
             <div class="absolute inset-8 border border-cream-50/20 pointer-events-none"></div>
             <div class="relative h-full flex flex-col justify-between p-14">
                 <a href="{{ route('home') }}" class="flex items-center gap-4">
-                    <span class="flex h-12 w-12 items-center justify-center border border-brass-400/70 outline outline-1 outline-offset-4 outline-brass-400/30 font-display text-xl text-brass-300">
-                        {{ strtoupper(substr(config('app.name', 'H'), 0, 1)) }}
-                    </span>
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name', 'Hotel') }} logo"
+                         class="h-12 w-auto max-w-[170px] object-contain shrink-0" />
                     <span class="leading-tight">
                         <span class="block font-display text-2xl tracking-wide text-cream-50">{{ config('app.name', 'Hotel') }}</span>
                         <span class="block text-[10px] uppercase tracking-[0.34em] text-brass-300 mt-1">Est. of Quiet Luxury</span>
@@ -44,7 +43,8 @@
             <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brass-700 via-brass-400 to-brass-700"></div>
             <div class="mx-auto w-full max-w-md">
                 <a href="{{ route('home') }}" class="lg:hidden flex items-center justify-center gap-3 mb-8">
-                    <span class="flex h-10 w-10 items-center justify-center border border-brass-600/60 font-display text-lg text-brass-700">{{ strtoupper(substr(config('app.name', 'H'), 0, 1)) }}</span>
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name', 'Hotel') }} logo"
+                         class="h-10 w-auto max-w-[150px] object-contain shrink-0" />
                     <span class="font-display text-xl text-ink-900">{{ config('app.name', 'Hotel') }}</span>
                 </a>
 

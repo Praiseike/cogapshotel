@@ -11,7 +11,11 @@ class EnsureGuest
     public function handle(Request $request, Closure $next): Response
     {
         if (auth()->check()) {
-            return redirect()->intended(route('dashboard'));
+            $home = auth()->user()->role === 'admin'
+                ? route('admin.dashboard')
+                : route('dashboard.index');
+
+            return redirect()->intended($home);
         }
 
         return $next($request);
